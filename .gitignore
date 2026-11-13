@@ -1,0 +1,23 @@
+# Unreal Engine build artifacts
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+*.VC.db
+*.opensdf
+*.sdf
+*.sln
+*.suo
+*.xcodeproj
+*.xcworkspace
+
+# Engine source, fetched by scripts/00_fetch_engine.sh
+UnrealEngine/
+UE5.zip
+
+# Pipeline log
+build.log
+
+# Local toolchain
+*.log

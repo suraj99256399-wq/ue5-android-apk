@@ -1,0 +1,12 @@
+using UnrealBuildTool;
+using System.Collections.Generic;
+
+public class MyGameTarget : TargetRules
+{
+	public MyGameTarget(TargetInfo Target) : base(Target)
+	{
+		Type = TargetType.Game;
+		DefaultBuildSettings = BuildSettingsVersion.V2;
+		ExtraModuleNames.Add("MyGame");
+	}
+}
