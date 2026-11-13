@@ -66,21 +66,24 @@ run_stage() {
   echo "config  : $CONFIG"
   echo "==================================================================="
 
-  run_stage "STAGE 1/4  fetch engine source" \
+  run_stage "STAGE 1/5  fetch engine source" \
     "$SCRIPT_DIR/00_fetch_engine.sh" "$UE_DIR" || exit 1
 
-  run_stage "STAGE 2/4  android toolchain" \
+  run_stage "STAGE 2/5  android toolchain" \
     "$SCRIPT_DIR/01_setup_android_toolchain.sh" "$UE_DIR" || exit 1
+
+  run_stage "STAGE 3/5  patch engine for Adreno 8xx (Snapdragon 8 Gen 4)" \
+    "$SCRIPT_DIR/05_patch_engine_snapdragon8gen4.sh" "$UE_DIR" || exit 1
 
   if [ "$SKIP_ENGINE_BUILD" -eq 1 ]; then
     echo
-    echo "############ STAGE 3/4  engine build: SKIPPED (binary engine) ############"
+    echo "############ STAGE 4/5  engine build: SKIPPED (binary engine) ############"
   else
-    run_stage "STAGE 3/4  build engine" \
+    run_stage "STAGE 4/5  build engine" \
       "$SCRIPT_DIR/02_build_engine.sh" "$UE_DIR" || exit 1
   fi
 
-  run_stage "STAGE 4/4  package apk" \
+  run_stage "STAGE 5/5  package apk" \
     "$SCRIPT_DIR/03_build_apk.sh" "$UE_DIR" "$PROJECT" "$CONFIG" || exit 1
 
   echo

@@ -51,6 +51,19 @@ echo "    ndk     : $NDKROOT"
 echo
 echo "==> APK artifacts:"
 find "$PROJECT_DIR/Saved" -name '*.apk' -printf '%10s  %p\n' 2>/dev/null || true
-echo
-echo "Install on a connected device with:"
-echo "    adb install -r <path-to>.apk"
+
+APK="$(find "$PROJECT_DIR/Saved/StagedBuilds" -name '*.apk' 2>/dev/null | head -n 1)"
+if [ -n "$APK" ]; then
+  echo
+  echo "==> Verifying APK"
+  if command -v "$ANDROID_HOME/build-tools/30.0.3/aapt" >/dev/null 2>&1; then
+    "$ANDROID_HOME/build-tools/30.0.3/aapt" dump badging "$APK" 2>/dev/null \
+      | grep -E "^(package|sdkVersion|targetSdkVersion|native-code|application-label)" || true
+  fi
+  echo
+  echo "==> Install on the phone (USB debugging on, phone plugged in):"
+  echo "    adb install -r \"$APK\""
+else
+  echo "WARNING: no APK produced - check the BuildCookRun output above" >&2
+  exit 1
+fi

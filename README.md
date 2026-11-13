@@ -132,6 +132,55 @@ entirely - this takes minutes instead of hours:
 ./scripts/run_all.sh ~/UnrealEngine ./MyGame/MyGame.uproject Shipping --skip-engine-build
 ```
 
+## Target device: Oppo K13 Turbo Pro 5G (Snapdragon 8 Gen 4 / Adreno 825)
+
+The project is tuned for this device:
+
+- **arm64 only** (`bBuildForArm64=True`, `bBuildForX8664=False`) - roughly halves
+  the APK and drops 32-bit paths the phone never uses.
+- **Vulkan first, ES 3.1 fallback** - the Adreno 825 is a Vulkan 1.3 part.
+- **ASTC textures** (`-cookflavor=ASTC`) - what this GPU wants natively.
+- `MinSDKVersion=29`, `TargetSDKVersion=34`.
+
+### The Adreno 8xx problem, and the fix
+
+UE 5.0 shipped in 2022, before the Adreno 8xx existed. Its
+`BaseDeviceProfiles.ini` stops at the Adreno 7xx generation, so a Snapdragon
+8 Gen 4 falls through to the conservative base Android profile.
+
+`scripts/05_patch_engine_snapdragon8gen4.sh` fixes this. It mirrors Epic's own
+Adreno 7xx matching rules for the 8xx family, so the phone is detected and gets
+the `Android_High` profile. The patch is purely additive, tested against the
+real `BaseDeviceProfiles.ini`, and idempotent.
+
+```
+$ ./scripts/05_patch_engine_snapdragon8gen4.sh ~/UnrealEngine
+==> Patching /home/you/UnrealEngine/Engine/Config/BaseDeviceProfiles.ini
+==> Verifying
+    Adreno8xx references: 7
+    profile section: ok
+    matching rule: ok
+==> Done. Backup at .../BaseDeviceProfiles.ini.orig
+```
+
+It runs automatically as stage 3 of `run_all.sh`.
+
+### Installing on the phone
+
+1. On the phone: Settings > About device > tap "Build number" 7 times to unlock
+   Developer options, then enable **USB debugging**.
+2. Plug the phone into the build machine with a data-capable USB cable.
+3. Accept the "Allow USB debugging" prompt on the phone.
+4. Install:
+
+```bash
+./scripts/04_install_apk.sh
+# or: adb install -r MyGame/Saved/StagedBuilds/Android_ASTC/MyGame.apk
+```
+
+The phone will show a Snapdragon 8 Gen 4 with the `Android_Adreno8xx` profile in
+the on-screen log, confirming the patch took effect.
+
 ## CI / build server
 
 `.github/workflows/build-android-apk.yml` runs the same pipeline on a machine

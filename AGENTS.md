@@ -82,6 +82,21 @@ Every stage is idempotent, which is what makes `run_all.sh` safe to re-run:
 - Older Android `commandlinetools-linux-6200805_latest.zip` extracts to a
   `tools/` folder, not `cmdline-tools/`. The setup script handles both layouts.
 
+## Target device: Oppo K13 Turbo Pro 5G
+
+Snapdragon 8 Gen 4, Adreno 825, arm64. The project and pipeline are tuned for it:
+
+- `MyGame/Config/DefaultEngine.ini`: `bBuildForArm64=True`, `bBuildForX8664=False`,
+  Vulkan + ES 3.1, `MinSDKVersion=29`, `TargetSDKVersion=34`, ASTC cook.
+  Every property name in that file was verified against the engine's own
+  `AndroidRuntimeSettings.h`.
+- `scripts/05_patch_engine_snapdragon8gen4.sh`: UE 5.0's `BaseDeviceProfiles.ini`
+  only knows Adreno up to 7xx, so an Adreno 825 would fall back to the
+  conservative base profile. This script mirrors Epic's 7xx matching rules for
+  the 8xx family (regex `Adreno \(TM\) 8[0-9][0-9]`), giving the phone the
+  `Android_High` profile. Purely additive, tested against the real ini, and
+  idempotent. Runs as stage 3 of `run_all.sh`.
+
 ## Project conventions
 
 - `MyGame` uses the **legacy** input bindings (`InputComponent->BindTouch`), not
