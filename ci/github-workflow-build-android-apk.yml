@@ -1,0 +1,71 @@
+name: Build Android APK
+
+# Builds MyGame as an Android APK from Unreal Engine source.
+#
+# IMPORTANT - runner requirements
+# This job needs a runner with at least 200 GB of free disk and 16 GB+ RAM.
+# GitHub's standard hosted runners (14 GB disk) are far too small, so this
+# workflow expects a self-hosted runner or a large hosted runner.
+#
+# Set the runner label in `runs-on` below. For a self-hosted machine that
+# already has the engine built, set the UE_DIR env var and enable the
+# "skip engine build" input to package only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_engine_build:
+        description: "Skip compiling the engine (use when a binary engine is already present)"
+        type: boolean
+        default: false
+
+env:
+  UE_DIR: /opt/UnrealEngine
+
+jobs:
+  build-apk:
+    runs-on: [self-hosted, linux, ue5]
+    timeout-minutes: 720
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Report available disk
+        run: |
+          df -h
+          free -h
+          nproc
+
+      - name: Install host dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq unzip curl git build-essential
+
+      - name: Fetch engine source
+        if: ${{ inputs.skip_engine_build == false }}
+        run: ./scripts/00_fetch_engine.sh "$UE_DIR"
+
+      - name: Set up Android toolchain
+        run: ./scripts/01_setup_android_toolchain.sh "$UE_DIR"
+
+      - name: Patch engine for Adreno 8xx (Snapdragon 8 Gen 4)
+        run: ./scripts/05_patch_engine_snapdragon8gen4.sh "$UE_DIR"
+
+      - name: Build engine
+        if: ${{ inputs.skip_engine_build == false }}
+        run: |
+          source "$HOME/.ue5-android-env"
+          ./scripts/02_build_engine.sh "$UE_DIR"
+
+      - name: Package APK
+        run: |
+          source "$HOME/.ue5-android-env"
+          ./scripts/03_build_apk.sh "$UE_DIR" ./MyGame/MyGame.uproject Shipping
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MyGame-android-apk
+          path: MyGame/Saved/StagedBuilds/**/*.apk
+          if-no-files-found: error
