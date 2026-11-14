@@ -82,6 +82,34 @@ Every stage is idempotent, which is what makes `run_all.sh` safe to re-run:
 - Older Android `commandlinetools-linux-6200805_latest.zip` extracts to a
   `tools/` folder, not `cmdline-tools/`. The setup script handles both layouts.
 
+## Definitive feasibility result (measured, not estimated)
+
+A UE5 Android APK **cannot** be built inside this sandbox. Measured numbers:
+
+| Stage | Needs | Cumulative |
+|---|---|---|
+| Download `UE5.zip` | 37.7 GB | 37.7 GB |
+| Extract (even pruned, Android-only) | ~53 GB | 90.7 GB |
+| Compile (peak intermediates + libs) | ~25 GB | ~115 GB |
+
+Usable disk: **77 GB** (52 GB on `/` + 25 GB on `/workspace`). The zip and the
+extracted tree must coexist, so the peak of **90.7 GB already exceeds 77 GB**
+before any compiling starts. RAM: UE5's link step wants 16-24 GB; only 15 GB is
+present, with no swap.
+
+Largest prune targets, for reference: `Plugins/Experimental` 17.9 GB,
+`Source/ThirdParty/PhysX3` 9.3 GB, `CEF3` 7.9 GB, `Intermediate` 31.9 GB
+(regenerable). Even dropping all of them leaves the download+extract peak too
+high.
+
+No prebuilt Android engine exists to shortcut this: the archive contains **zero**
+`libUE4.so`/`libUnreal.so`, and no public Docker image ships a prebuilt arm64 UE5
+Android engine (Epic's official images are token-gated).
+
+Conclusion: this is a hardware limit, not a time, permission, or effort limit.
+The pipeline in this repo is correct and ready; it needs a Linux host with
+200 GB disk and 16 GB+ RAM.
+
 ## Target device: Oppo K13 Turbo Pro 5G
 
 Snapdragon 8 Gen 4, Adreno 825, arm64. The project and pipeline are tuned for it:
