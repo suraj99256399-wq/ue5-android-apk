@@ -181,6 +181,58 @@ It runs automatically as stage 3 of `run_all.sh`.
 The phone will show a Snapdragon 8 Gen 4 with the `Android_Adreno8xx` profile in
 the on-screen log, confirming the patch took effect.
 
+## No computer? Build from your phone with a free cloud VM
+
+You do not need to own a PC. You need a Linux machine with 200 GB disk and
+16 GB RAM *for a few hours*. You can rent one free and drive it entirely from
+your phone's browser.
+
+This is the only physically possible route without a PC: Unreal Engine's Android
+build tools (UnrealBuildTool, clang, the Android NDK) run on x86-64 Linux only.
+They cannot run on Android/ARM, so the phone itself cannot do the build.
+
+### Option A - Oracle Cloud Always Free (free forever, ARM)
+
+Oracle's Always Free tier includes an Ampere A1 machine with up to 4 cores,
+24 GB RAM and 200 GB storage - enough on paper.
+
+Caveat: it is an ARM64 host, and Epic only officially supports building UE5 on
+x86-64. The build may hit ARM-specific problems. Try this first only because it
+is free forever; if it fails, use Option B.
+
+### Option B - a free trial x86 VM (reliable)
+
+Google Cloud or Azure both give trial credit that covers a large x86 VM for the
+few hours the build takes. This is the reliable path.
+
+1. From your phone browser, sign up for a free trial (Google Cloud: $300/90
+   days; Azure: $200/30 days).
+2. Create a VM: Ubuntu 22.04, **8 vCPU, 32 GB RAM, 250 GB SSD**.
+3. Open the VM's **SSH-in-browser** console (both clouds have one - no app
+   needed).
+4. On the VM, run:
+
+```bash
+sudo apt-get update && sudo apt-get install -y unzip curl git build-essential
+git clone <this repo> ue5-apk && cd ue5-apk
+./scripts/run_all.sh ~/UnrealEngine ./MyGame/MyGame.uproject Shipping
+```
+
+5. When it finishes, download the APK from the VM to your phone:
+
+```bash
+# on the VM - serve the file over HTTP
+cd MyGame/Saved/StagedBuilds/Android_ASTC && python3 -m http.server 8080
+```
+
+   Then open `http://<vm-ip>:8080/MyGame.apk` in your phone's browser and
+   install it. (Allow "Install unknown apps" for your browser first.)
+
+6. **Delete the VM** when done so it stops costing credit.
+
+The pipeline resumes automatically if your phone's connection drops mid-build;
+re-run the same command and it continues where it left off.
+
 ## CI / build server
 
 `.github/workflows/build-android-apk.yml` runs the same pipeline on a machine
