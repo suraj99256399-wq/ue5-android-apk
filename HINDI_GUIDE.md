@@ -81,15 +81,14 @@ SSH terminal में एक-एक करके ये चलाएँ:
 **Command 1 — code लाएँ:**
 
 ```bash
-git clone <REPO_LINK> ue5-apk && cd ue5-apk
+wget -O ue5-android-apk.tar.gz https://work-1-zjjcvxvizlfoshgx.prod-runtime.all-hands.dev/ue5-android-apk.tar.gz
+tar xzf ue5-android-apk.tar.gz
+cd ue5-android-apk
 ```
 
-`<REPO_LINK>` की जगह वह लिंक डालें जो आपको नीचे "REPO" वाले हिस्से में दिया
-गया है। अगर आपके पास सिर्फ़ tar.gz फ़ाइल है, तो:
-
-```bash
-wget -O ue5-android-apk.tar.gz <TARBALL_LINK> && tar xzf ue5-android-apk.tar.gz && cd ue5-android-apk
-```
+(तीनों line एक-एक करके चलाएँ। पहली line पूरा project download करेगी — यह सिर्फ़
+कुछ MB का है, क्योंकि इसमें engine नहीं, बस scripts और game project हैं।
+engine बाद में script ख़ुद download करेगी।)
 
 **Command 2 — पूरा build चलाएँ:**
 
