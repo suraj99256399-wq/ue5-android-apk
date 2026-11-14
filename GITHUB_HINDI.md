@@ -1,25 +1,41 @@
 # इन files को GitHub पर डालने की हिंदी गाइड
 
-सच बात पहले: **मैं आपके GitHub पर ख़ुद upload नहीं कर सकता।** कारण — इस
-environment का GitHub token सिर्फ़ पढ़ सकता है, नया repository बना नहीं सकता
-(हर बार error आता है: "Resource not accessible by integration")। इसलिए upload
-आपको ख़ुद करना होगा। नीचे सबसे आसान तरीका दिया है — बस कुछ tap और 3 command।
+सच बात पहले: **मैं आपके GitHub पर ख़ुद upload नहीं कर सकता।** पूरी जाँच के बाद
+कारण पक्का पता चल गया है:
+
+- इस environment का GitHub token एक **GitHub App token** है (`ghu_` prefix)।
+- उस App की आपके account पर **0 installations** हैं। जाँच का नतीजा:
+  `https://api.github.com/user/installations` → `total_count: 0`
+- इसलिए GitHub उसे सिर्फ़ **पढ़ने** देता है, **लिखने नहीं**। हर लिखने वाला
+  रास्ता 403 देता है: `git push`, Contents API, gist — सब।
+
+यानी upload आपको ख़ुद करना होगा। दो आसान तरीके नीचे हैं।
 
 ---
 
-## तरीका 1 (सबसे आसान): browser में repo बनाएँ, फिर VM से push करें
+## तरीका 0 (सबसे छोटा): App को repo का access दें, फिर मैं push कर दूँगा
+
+1. फ़ोन में `github.com` खोलें → अपनी photo → **Settings**।
+2. बाईं तरफ़ नीचे **Applications** → **Installed GitHub Apps**।
+3. जो **OpenHands** वाला App दिखे, उसके आगे **Configure** दबाएँ।
+4. **Repository access** में **Only select repositories** चुनें और
+   `ue5-android-apk` को add करें।
+5. **Save** दबाएँ। मुझे बताएँ — मैं तुरंत push कर दूँगा।
+
+(अगर Installed GitHub Apps में OpenHands न दिखे, तो नीचे तरीका 1 इस्तेमाल करें।)
+
+---
+
+## तरीका 1 (हमेशा चलेगा): Personal Access Token से ख़ुद push करें
 
 ### चरण A — GitHub पर खाली repo बनाएँ (फ़ोन के browser से)
 
 1. फ़ोन में Chrome खोलें → `github.com` पर जाएँ → sign in करें।
 2. ऊपर दाईं तरफ़ **+** icon → **New repository**।
 3. **Repository name:** `ue5-android-apk`
-4. **Public** चुनें (ताकि VM से बिना password push हो सके... नहीं, push के लिए
-   token चाहिए — नीचे चरण B देखें)।
+4. **Public** चुनें।
 5. **"Add a README file" पर tick न करें** (हमारे पास पहले से README है)।
 6. **Create repository** दबाएँ।
-7. अब जो page खुलेगा, उसका URL note कर लें, जैसे:
-   `https://github.com/<आपका-नाम>/ue5-android-apk`
 
 ### चरण B — एक Personal Access Token बनाएँ (push के लिए ज़रूरी)
 
@@ -36,19 +52,22 @@ environment का GitHub token सिर्फ़ पढ़ सकता है
 (यही VM आप build के लिए भी इस्तेमाल करेंगे। VM का SSH terminal खोलें।)
 
 ```bash
-# 1) project download करें
 wget -O p.tar.gz https://work-1-zjjcvxvizlfoshgx.prod-runtime.all-hands.dev/ue5-android-apk.tar.gz
 tar xzf p.tar.gz && cd ue5-android-apk
+./scripts/push_to_github.sh https://github.com/<आपका-नाम>/ue5-android-apk.git
+```
 
-# 2) git repo बनाएँ
+जब **password** पूछे → वो `ghp_...` token paste करें (GitHub password नहीं)।
+
+या बिना script के, सीधे:
+
+```bash
+wget -O p.tar.gz https://work-1-zjjcvxvizlfoshgx.prod-runtime.all-hands.dev/ue5-android-apk.tar.gz
+tar xzf p.tar.gz && cd ue5-android-apk
 git init -b main
 git add -A
 git commit -m "UE5 -> Android APK pipeline"
-
-# 3) GitHub से जोड़ें (यहाँ अपना नाम डालें)
 git remote add origin https://github.com/<आपका-नाम>/ue5-android-apk.git
-
-# 4) push करें (password पूछे तो Personal Access Token paste करें, GitHub password नहीं)
 git push -u origin main
 ```
 
