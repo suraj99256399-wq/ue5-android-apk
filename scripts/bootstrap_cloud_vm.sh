@@ -21,7 +21,7 @@ REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 UE_DIR="${UE_DIR:-$HOME/UnrealEngine}"
 PROJECT="${PROJECT:-$REPO_DIR/MyGame/MyGame.uproject}"
 CONFIG="${CONFIG:-Shipping}"
-PORT="${PORT:-8080}"
+PORT="${PORT:-80}"
 
 echo "=============================================================="
 echo " UE5 -> Android APK, one-command cloud build"
@@ -82,15 +82,27 @@ echo " APK : $APK"
 echo " Size: $(du -h "$APK" | cut -f1)"
 echo "=============================================================="
 echo
-echo "On your phone, open this address and install the APK:"
+echo "TWO ways to get the APK onto your phone:"
 echo
-echo "    http://${IP}:${PORT}/$(basename "$APK")"
+echo "  1) Easiest - browser SSH file download:"
+echo "     In the Google Cloud 'SSH' window, click the gear icon (top right)"
+echo "     and choose 'Download file'. Enter this path:"
+echo "         $APK"
 echo
-echo "(Allow 'Install unknown apps' for your browser when prompted.)"
+echo "  2) Over the network (needs the VM's firewall to allow the port):"
+echo "         http://${IP}:${PORT}/$(basename "$APK")"
+echo "     On Google Cloud, tick 'Allow HTTP traffic' when creating the VM"
+echo "     so port 80 is reachable. Allow 'Install unknown apps' in your"
+echo "     phone's browser when prompted."
 echo
-echo "A web server is starting now. Press Ctrl+C to stop it."
-echo "Remember to delete this VM afterwards so it stops costing credit."
+echo "Remember to STOP or DELETE this VM afterwards so it stops costing credit."
 echo
 
 cd "$(dirname "$APK")"
-exec python3 -m http.server "$PORT"
+if [ "$PORT" -lt 1024 ]; then
+  echo "Starting web server on port $PORT (needs sudo). Ctrl+C to stop."
+  exec sudo python3 -m http.server "$PORT"
+else
+  echo "Starting web server on port $PORT. Ctrl+C to stop."
+  exec python3 -m http.server "$PORT"
+fi
