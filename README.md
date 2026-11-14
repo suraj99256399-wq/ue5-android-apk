@@ -50,7 +50,9 @@ scripts/00_fetch_engine.sh              download + extract UE5 source       (~38
 scripts/01_setup_android_toolchain.sh   SDK 30 / NDK r21e / JDK 8
 scripts/02_build_engine.sh              Setup.sh + compile UnrealEditor     (1-3 h)
 scripts/03_build_apk.sh                 cook + package MyGame.apk
+scripts/05_patch_engine_snapdragon8gen4.sh  Adreno 8xx device profile (auto-run)
 scripts/04_install_apk.sh               adb install onto a device
+scripts/bootstrap_cloud_vm.sh           one-command build on a fresh cloud VM
 ```
 
 ### Run it all at once (recommended)
@@ -210,22 +212,17 @@ few hours the build takes. This is the reliable path.
 2. Create a VM: Ubuntu 22.04, **8 vCPU, 32 GB RAM, 250 GB SSD**.
 3. Open the VM's **SSH-in-browser** console (both clouds have one - no app
    needed).
-4. On the VM, run:
+4. On the VM, run one command:
 
 ```bash
-sudo apt-get update && sudo apt-get install -y unzip curl git build-essential
 git clone <this repo> ue5-apk && cd ue5-apk
-./scripts/run_all.sh ~/UnrealEngine ./MyGame/MyGame.uproject Shipping
+./scripts/bootstrap_cloud_vm.sh
 ```
 
-5. When it finishes, download the APK from the VM to your phone:
+   That installs dependencies, builds the APK, and then serves it over HTTP and
+   prints the exact address to open on your phone.
 
-```bash
-# on the VM - serve the file over HTTP
-cd MyGame/Saved/StagedBuilds/Android_ASTC && python3 -m http.server 8080
-```
-
-   Then open `http://<vm-ip>:8080/MyGame.apk` in your phone's browser and
+5. Open the printed `http://<vm-ip>:8080/MyGame.apk` in your phone's browser and
    install it. (Allow "Install unknown apps" for your browser first.)
 
 6. **Delete the VM** when done so it stops costing credit.
